@@ -1,10 +1,30 @@
 <template>
   <div id="app" :class="{ 'dark': isDark }" class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <!-- Error Screen -->
+    <div v-if="authStore.error && !authStore.initialized" class="fixed inset-0 bg-white dark:bg-gray-900 flex items-center justify-center z-50">
+      <div class="text-center max-w-md p-6">
+        <div class="w-16 h-16 mx-auto mb-4 text-red-500">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+          </svg>
+        </div>
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Connection Error</h2>
+        <p class="text-gray-600 dark:text-gray-300 mb-4">{{ authStore.error }}</p>
+        <button @click="retryConnection" class="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors">
+          Retry Connection
+        </button>
+        <button @click="continueOffline" class="ml-2 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+          Continue Offline
+        </button>
+      </div>
+    </div>
+
     <!-- Loading Screen -->
-    <div v-if="authStore.loading" class="fixed inset-0 bg-white dark:bg-gray-900 flex items-center justify-center z-50">
+    <div v-else-if="authStore.loading" class="fixed inset-0 bg-white dark:bg-gray-900 flex items-center justify-center z-50">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
         <p class="text-gray-600 dark:text-gray-300">Loading Apex Task Manager...</p>
+        <p class="text-sm text-gray-400 mt-2">This may take a moment...</p>
       </div>
     </div>
 
@@ -100,6 +120,34 @@ const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
 }
 
+const retryConnection = async () => {
+  authStore.error = null
+  authStore.loading = true
+  authStore.initialized = false
+  try {
+    await authStore.initialize()
+  } catch (error) {
+    console.error('Retry failed:', error)
+  }
+}
+
+const continueOffline = () => {
+  authStore.error = null
+  authStore.loading = false
+  authStore.initialized = true
+  // Set user to a guest state for offline mode
+  authStore.user = {
+    uid: 'offline-user',
+    email: 'offline@local.app',
+    displayName: 'Offline User',
+    photoURL: null
+  }
+  authStore.profile = {
+    role: 'user',
+    business_units: ['personal']
+  }
+}
+
 const initializeTheme = () => {
   const savedTheme = localStorage.getItem('theme')
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -136,13 +184,27 @@ onMounted(async () => {
   // Initialize theme
   initializeTheme()
   
-  // Initialize authentication
-  await authStore.initialize()
+  // Initialize authentication with fallback
+  try {
+    await authStore.initialize()
+  } catch (error) {
+    console.error('Failed to initialize auth:', error)
+    // Auto-continue offline after a timeout
+    setTimeout(() => {
+      if (authStore.loading && !authStore.initialized) {
+        continueOffline()
+      }
+    }, 15000) // 15 second timeout
+  }
   
   // Initialize online tracking if authenticated
   if (authStore.isAuthenticated) {
-    onlineStore.initializeOnlineTracking()
-    onlineStore.setUserOnline(authStore.user.uid)
+    try {
+      onlineStore.initializeOnlineTracking()
+      onlineStore.setUserOnline(authStore.user.uid)
+    } catch (error) {
+      console.warn('Online tracking failed:', error)
+    }
   }
   
   // Event listeners

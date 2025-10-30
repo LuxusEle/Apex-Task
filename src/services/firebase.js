@@ -14,14 +14,25 @@ const firebaseConfig = {
   appId: "1:316844638927:web:3c87dded33f8196d7d2dba"
 };
 
-const app = initializeApp(firebaseConfig);
+let app, db, auth, storage, functions
 
-export const db = getFirestore(app)
-export const auth = getAuth(app)
-export const storage = getStorage(app)
-export const functions = getFunctions(app)
+try {
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app)
+  auth = getAuth(app)
+  storage = getStorage(app)
+  functions = getFunctions(app)
+  
+  // Set timeout for auth operations
+  auth.settings = { timeout: 10000 }
+  
+  console.log('✅ Firebase initialized successfully')
+} catch (error) {
+  console.error('❌ Firebase initialization failed:', error)
+  throw error
+}
 
-// Initialize messaging for notifications
+export { db, auth, storage, functions }
 let messaging = null
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   try {
