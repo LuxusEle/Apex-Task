@@ -76,7 +76,7 @@ import { useAuthStore } from './stores/authStore'
 import { useOnlineStore } from './stores/onlineStore'
 
 // Components
-import LoginScreen from './components/LoginScreen.vue'
+import LoginScreen from './views/LoginScreen.vue'
 import Sidebar from './components/Sidebar.vue'
 import TopNavigation from './components/TopNavigation.vue'
 import AIAssistantChat from './components/AIAssistantChat.vue'
