@@ -23,11 +23,6 @@
       "VITE_APP_ENV": "production"
     }
   },
-  "functions": {
-    "src/api/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
@@ -78,14 +73,8 @@
   ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/cleanup",
-      "schedule": "0 2 * * *"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "regions": ["iad1"],
