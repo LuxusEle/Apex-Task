@@ -9,14 +9,14 @@
   "env": {
     "VITE_APP_ENV": "production",
     "VITE_APP_NAME": "Apex Task Manager",
-    "VITE_FIREBASE_API_KEY": "@firebase_api_key",
-    "VITE_FIREBASE_AUTH_DOMAIN": "@firebase_auth_domain", 
-    "VITE_FIREBASE_PROJECT_ID": "@firebase_project_id",
-    "VITE_FIREBASE_STORAGE_BUCKET": "@firebase_storage_bucket",
-    "VITE_FIREBASE_MESSAGING_SENDER_ID": "@firebase_messaging_sender_id",
-    "VITE_FIREBASE_APP_ID": "@firebase_app_id",
-    "VITE_GEMINI_API_KEY": "@gemini_api_key",
-    "VITE_FIREBASE_VAPID_KEY": "@firebase_vapid_key"
+    "VITE_FIREBASE_API_KEY": "AIzaSyDfdafXnvowDJdQcHgIKY6k1LrDORLp3WY",
+    "VITE_FIREBASE_AUTH_DOMAIN": "studio-1417219424-43dad.firebaseapp.com", 
+    "VITE_FIREBASE_PROJECT_ID": "studio-1417219424-43dad",
+    "VITE_FIREBASE_STORAGE_BUCKET": "studio-1417219424-43dad.firebasestorage.app",
+    "VITE_FIREBASE_MESSAGING_SENDER_ID": "316844638927",
+    "VITE_FIREBASE_APP_ID": "1:316844638927:web:3c87dded33f8196d7d2dba",
+    "VITE_GEMINI_API_KEY": "AIzaSyC9o1mCOoeZSdgswnn3g19JbhBeXfVrEcA",
+    "VITE_FIREBASE_VAPID_KEY": "your-vapid-key-here"
   },
   "build": {
     "env": {
