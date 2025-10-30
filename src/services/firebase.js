@@ -18,18 +18,37 @@ let app, db, auth, storage, functions
 
 try {
   app = initializeApp(firebaseConfig);
-  db = getFirestore(app)
+  
+  // Initialize only essential services initially
   auth = getAuth(app)
-  storage = getStorage(app)
-  functions = getFunctions(app)
   
-  // Set timeout for auth operations
-  auth.settings = { timeout: 10000 }
+  // Set aggressive timeout for auth operations
+  if (auth.settings) {
+    auth.settings.timeout = 3000 // 3 seconds max
+  }
   
-  console.log('✅ Firebase initialized successfully')
+  // Initialize other services lazily
+  setTimeout(() => {
+    try {
+      db = getFirestore(app)
+      storage = getStorage(app)
+      functions = getFunctions(app)
+    } catch (error) {
+      console.warn('Non-critical Firebase services failed:', error)
+    }
+  }, 0)
+  
+  console.log('✅ Firebase auth initialized')
 } catch (error) {
   console.error('❌ Firebase initialization failed:', error)
-  throw error
+  // Create mock services for offline mode
+  auth = {
+    currentUser: null,
+    onAuthStateChanged: (callback) => {
+      callback(null)
+      return () => {}
+    }
+  }
 }
 
 export { db, auth, storage, functions }

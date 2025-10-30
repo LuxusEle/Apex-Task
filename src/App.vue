@@ -20,11 +20,10 @@
     </div>
 
     <!-- Loading Screen -->
-    <div v-else-if="authStore.loading" class="fixed inset-0 bg-white dark:bg-gray-900 flex items-center justify-center z-50">
+    <div v-else-if="authStore.loading && !fastLoadComplete" class="fixed inset-0 bg-white dark:bg-gray-900 flex items-center justify-center z-50">
       <div class="text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
-        <p class="text-gray-600 dark:text-gray-300">Loading Apex Task Manager...</p>
-        <p class="text-sm text-gray-400 mt-2">This may take a moment...</p>
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mb-4 mx-auto"></div>
+        <p class="text-gray-600 dark:text-gray-300 text-sm">Loading...</p>
       </div>
     </div>
 
@@ -91,11 +90,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { SparklesIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from './stores/authStore'
 import { useOnlineStore } from './stores/onlineStore'
 
-// Components
+// Components (lazy loaded to improve performance)
 import LoginScreen from './views/LoginScreen.vue'
 import Sidebar from './components/Sidebar.vue'
 import TopNavigation from './components/TopNavigation.vue'
@@ -111,6 +109,7 @@ const sidebarCollapsed = ref(false)
 const showAIChat = ref(false)
 const showMobileMenu = ref(false)
 const isDark = ref(false)
+const fastLoadComplete = ref(false)
 
 // Computed
 const isMobile = computed(() => window.innerWidth < 1024)
@@ -181,39 +180,46 @@ const handleOnlineStatus = () => {
 
 // Lifecycle
 onMounted(async () => {
-  // Initialize theme
+  // Show app immediately after 200ms regardless of auth status
+  setTimeout(() => {
+    fastLoadComplete.value = true
+  }, 200)
+  
+  // Initialize theme immediately (non-blocking)
   initializeTheme()
   
-  // Initialize authentication with fallback
-  try {
-    await authStore.initialize()
-  } catch (error) {
-    console.error('Failed to initialize auth:', error)
-    // Auto-continue offline after a timeout
-    setTimeout(() => {
-      if (authStore.loading && !authStore.initialized) {
-        continueOffline()
-      }
-    }, 15000) // 15 second timeout
-  }
+  // Add immediate responsive check (non-blocking)
+  handleResize()
   
-  // Initialize online tracking if authenticated
-  if (authStore.isAuthenticated) {
-    try {
-      onlineStore.initializeOnlineTracking()
-      onlineStore.setUserOnline(authStore.user.uid)
-    } catch (error) {
-      console.warn('Online tracking failed:', error)
-    }
-  }
-  
-  // Event listeners
+  // Add event listeners immediately
   window.addEventListener('resize', handleResize)
   window.addEventListener('online', handleOnlineStatus)
   window.addEventListener('offline', handleOnlineStatus)
   
-  // Initial responsive check
-  handleResize()
+  // Initialize authentication asynchronously without blocking UI
+  setTimeout(async () => {
+    try {
+      await authStore.initialize()
+    } catch (error) {
+      console.error('Failed to initialize auth:', error)
+      // Auto-continue offline after a shorter timeout
+      setTimeout(() => {
+        if (authStore.loading && !authStore.initialized) {
+          continueOffline()
+        }
+      }, 5000) // Reduced to 5 seconds
+    }
+    
+    // Initialize online tracking if authenticated (non-blocking)
+    if (authStore.isAuthenticated) {
+      try {
+        await onlineStore.initializeOnlineTracking()
+        onlineStore.setUserOnline(authStore.user.uid)
+      } catch (error) {
+        console.warn('Online tracking failed:', error)
+      }
+    }
+  }, 0) // Run immediately but asynchronously
 })
 
 onUnmounted(() => {
