@@ -52,12 +52,4 @@ export default defineConfig({
       '@google/generative-ai',
     ],
   },
-  css: {
-    postcss: {
-      plugins: [
-        require('tailwindcss'),
-        require('autoprefixer'),
-      ],
-    },
-  },
 })
